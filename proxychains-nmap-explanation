@@ -1,0 +1,43 @@
+####The following are notes on how to use proxychains, sock4 server, and nmap to scan through a DMZ
+like network.                                                                                 
+                                                                                                 
+#In order for this to work you will need to have already compromised a computer that has access
+to the "internal" network. Once that machine is compromised use following metasploit commands:    
+                                                                                                 
+                                                                                                 
+run autoroute -s x.x.x.0/24                                                                      
+#x is the additional network discovered                                                          
+                                                                                                 
+#check to make sure this is added                                                                
+run autoroute -p                                                                                 
+                                                                                                 
+#background that session and use search for socks4 server in msfconsole.                          
+#change the port to whatever you prefer - dont leave deafult                                     
+                                                                                                 
+#after that, the server is running and we need to edit our proxychains.conf file                          
+                                                                                                 
+vim /etc/proxychains.conf                                                                        
+                                                                                                 
+#edit the last line to the same port number as the socks4 server 
+
+
+#now we can use proxychains to scan the internal network with nmap
+
+#To identify what boxes are availible quickly, we will use a -sn scan looking at port 80 - but you
+#can change that to whatever port is preferred. Once that is complete, you can then use a more
+#targetted scan on those boxes. commands to follow
+
+proxychains nmap -sn x.x.x.0/24 --unprivilege > nmap.txt
+
+#this will take a long time to compete - if it says okay and has a latency of 0.x then it means there is probably a box at that IP to target. To cut this down to something pretty to re use in an nmap scan we can do the following
+
+cat nmap.txt | grep '(0.*' -B 1 | grep 172 | cut -d ' ' -f 5 > new_nmap.txt
+
+#172 is the start of the IP address scanned, but this will give us a nice list of availble box to
+#do a more intense nmap scan on with the following. 
+#0.* -this is done because the latency for a box that is "up" is generally 0.x, on my scan 
+#the other latency results were at 3.6s. 
+#also it is worth noting that you can probably remove the first and last IP addresses from the list
+
+
+proxychains nmap -sV -iL new_nmap.txt -unprivilege > full_nmap_scan_results
