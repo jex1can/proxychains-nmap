@@ -1,0 +1,22 @@
+msfconsole
+
+run autoroute -s x.x.x.0/24
+
+run autoroute -p
+background
+
+search socks4a
+set SRVPORT xxxx
+run
+
+#new terminal
+vim /etc/proxychains.conf
+#change port number on the last line from 9050 to the same as the SRVPORT port
+
+esc 
+:wq
+
+proxychains nmap -sn x.x.x.0/24 --unprivilege > nmap.txt
+cat nmap.txt | grep '(0.*' -B 1 | grep 172 | cut -d ' ' -f 5 > new_nmap.txt
+
+proxychains nmap -sV -iL new_nmap.txt -unprivilege > full_nmap_scan_results
